@@ -24,7 +24,7 @@ const WorldCompletionScreen: React.FC<WorldCompletionScreenProps> = ({
   }, []);
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-6 relative overflow-hidden">
+    <div className="flex items-center justify-center p-6 relative">
       {/* Confetti effect */}
       {showConfetti && (
         <div className="absolute inset-0 pointer-events-none">
@@ -46,32 +46,32 @@ const WorldCompletionScreen: React.FC<WorldCompletionScreenProps> = ({
       )}
 
       <Card className="max-w-2xl w-full bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 border-4 border-green-300 shadow-2xl animate-scale-in">
-        <CardContent className="p-12 text-center">
-          <div className="text-8xl mb-6 animate-bounce">
+        <CardContent className="p-8 text-center">{/* Reducido de p-12 a p-8 */}
+          <div className="text-6xl mb-4 animate-bounce">{/* Reducido de text-8xl */}
             {worldIcon}
           </div>
           
-          <h2 className="text-4xl font-montserrat font-bold text-senda-primary mb-4">
+          <h2 className="text-3xl font-montserrat font-bold text-senda-primary mb-3">{/* Reducido de text-4xl */}
             ¡Mundo Superado!
           </h2>
           
-          <p className="text-2xl text-gray-700 font-lato mb-8">
+          <p className="text-xl text-gray-700 font-lato mb-6">{/* Reducido de text-2xl y mb-8 */}
             Has completado el mundo de <span className="font-bold text-senda-secondary">{worldName}</span>
           </p>
 
           {/* Badge visual */}
-          <div className="bg-white rounded-2xl p-8 mb-8 shadow-lg border-4 border-yellow-400 inline-block animate-pulse">
-            <div className="text-6xl mb-4">{badgeIcon}</div>
-            <div className="text-xl font-montserrat font-bold text-senda-primary mb-2">
+          <div className="bg-white rounded-2xl p-6 mb-6 shadow-lg border-4 border-yellow-400 inline-block animate-pulse">{/* Reducido de p-8 y mb-8 */}
+            <div className="text-5xl mb-3">{badgeIcon}</div>{/* Reducido de text-6xl y mb-4 */}
+            <div className="text-lg font-montserrat font-bold text-senda-primary mb-2">{/* Reducido de text-xl */}
               🏆 Medalla Desbloqueada
             </div>
-            <div className="text-lg text-gray-700 font-semibold">
+            <div className="text-base text-gray-700 font-semibold">{/* Reducido de text-lg */}
               {badgeName}
             </div>
           </div>
 
-          <div className="bg-gradient-to-r from-yellow-100 to-orange-100 rounded-xl p-6 mb-8 border-2 border-yellow-300">
-            <p className="text-lg text-gray-800 font-lato font-semibold">
+          <div className="bg-gradient-to-r from-yellow-100 to-orange-100 rounded-xl p-4 mb-6 border-2 border-yellow-300">{/* Reducido de p-6 y mb-8 */}
+            <p className="text-base text-gray-800 font-lato font-semibold">{/* Reducido de text-lg */}
               {worldName === "Intereses" && "¡Ya sabes qué te inspira! Siguiente mundo: Personalidad"}
               {worldName === "Personalidad" && "¡Conoces tu esencia! Siguiente mundo: Valores"}
               {worldName === "Valores" && "¡Tienes claro qué importa! Siguiente mundo: Talentos"}
@@ -83,7 +83,7 @@ const WorldCompletionScreen: React.FC<WorldCompletionScreenProps> = ({
 
           <Button
             onClick={onContinue}
-            className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white text-lg px-12 py-6 rounded-xl shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-110 font-montserrat font-bold"
+            className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white text-base px-10 py-5 rounded-xl shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-110 font-montserrat font-bold"
           >
             👉 Continuar mi aventura
           </Button>

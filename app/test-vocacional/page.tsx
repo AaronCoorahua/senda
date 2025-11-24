@@ -23,6 +23,7 @@ import Dashboard from "@/components/test/Dashboard";
 import XPNotification from "@/components/test/XPNotification";
 import WorldMap from "@/components/test/WorldMap";
 import BadgeCollection from "@/components/test/BadgeCollection";
+import FOMOBanner from "@/components/test/FOMOBanner";
 
 export interface TestResponse {
   intereses: { [key: string]: string };
@@ -152,7 +153,12 @@ function TestVocacionalContent() {
               <span className="text-sm font-montserrat font-bold" style={{ color: "#134E4A" }}>
                 💡 Paso {currentPhase + 1}: Descubre más de ti
               </span>
-              <Progress value={progress} className="flex-1 h-3" />
+              <div className="flex-1 bg-gray-200 rounded-full h-3 overflow-hidden">
+                <div 
+                  className="bg-gradient-to-r from-green-500 to-emerald-600 h-full transition-all duration-500"
+                  style={{ width: `${progress}%` }}
+                />
+              </div>
               <span className="text-sm font-montserrat font-semibold" style={{ color: "#134E4A" }}>
                 {Math.round(progress)}%
               </span>
@@ -192,6 +198,32 @@ function TestVocacionalContent() {
                 {currentPhase === 5 && "🎯 Tu propósito es la estrella que guía tu camino"}
               </p>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Banner FOMO, Mapa de mundos e Insignias - Debajo del header, fuera del main */}
+      {currentPhase >= 0 && currentPhase < 6 && (
+        <div className="bg-[#FCFAF5]">
+          <div className="container mx-auto px-6 pt-6 pb-4">
+            {/* Banner FOMO */}
+            <FOMOBanner currentProgress={Math.round((Math.floor(currentPhase) / phases.length) * 100)} />
+            
+            {/* Mapa de mundos */}
+            <div className="mt-4">
+              <WorldMap
+                worlds={phases.map(p => ({ name: p.name, icon: p.icon }))}
+                currentWorld={Math.floor(currentPhase)}
+                completedWorlds={completedWorlds}
+              />
+            </div>
+            
+            {/* Colección de insignias - solo si ya completaste al menos un mundo */}
+            {completedWorlds.length > 0 && (
+              <div className="mt-4">
+                <BadgeCollection badges={allBadges} />
+              </div>
+            )}
           </div>
         </div>
       )}
@@ -361,20 +393,6 @@ function TestVocacionalContent() {
           message={notificationMessage} 
           show={showXPNotification}
         />
-
-        {/* Mapa de mundos (solo en fases 0-5) */}
-        {currentPhase >= 0 && currentPhase < 6 && Number.isInteger(currentPhase) && (
-          <WorldMap
-            worlds={phases.map(p => ({ name: p.name, icon: p.icon }))}
-            currentWorld={Math.floor(currentPhase)}
-            completedWorlds={completedWorlds}
-          />
-        )}
-
-        {/* Colección de insignias */}
-        {currentPhase >= 0 && (
-          <BadgeCollection badges={allBadges} />
-        )}
       </main>
     </div>
   );
