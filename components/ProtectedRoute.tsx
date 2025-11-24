@@ -1,34 +1,100 @@
+"use client";
+
 import { useEffect, useState } from "react";
-import { Navigate, useLocation } from "react-router-dom";
+import { useRouter, usePathname } from "next/navigation";
 import { supabase } from "@/integrations/supabase/client";
 
-export default function ProtectedRoute({ children }: { children: JSX.Element }) {
-  const [loading, setLoading] = useState(true);
-  const [authed, setAuthed] = useState(false);
-  const location = useLocation();
+interface ProtectedRouteProps {
+  children: React.ReactNode;
+  requiredRole?: "student" | "organization";
+}
+
+export default function ProtectedRoute({ children, requiredRole }: ProtectedRouteProps) {
+  const router = useRouter();
+  const pathname = usePathname();
+  const [isLoading, setIsLoading] = useState(true);
+  const [isAuthorized, setIsAuthorized] = useState(false);
 
   useEffect(() => {
-    let mounted = true;
+    const checkAuth = async () => {
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession();
+        
+        if (error || !session) {
+          // No hay sesión, redirigir al login correspondiente
+          if (requiredRole === "organization") {
+            router.push("/org/login");
+          } else {
+            router.push("/login?redirect=" + pathname);
+          }
+          return;
+        }
 
-    (async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (mounted) {
-        setAuthed(!!session);
-        setLoading(false);
+        // Verificar el rol si es necesario
+        if (requiredRole) {
+          const { data: userData, error: userError } = await supabase
+            .from("usuarios")
+            .select("tipo_usuario")
+            .eq("id", session.user.id)
+            .single();
+
+          if (userError || !userData) {
+            router.push("/login");
+            return;
+          }
+
+          if (requiredRole === "organization" && userData.tipo_usuario !== "colegio") {
+            router.push("/login");
+            return;
+          }
+
+          if (requiredRole === "student" && userData.tipo_usuario === "colegio") {
+            router.push("/org/login");
+            return;
+          }
+        }
+
+        setIsAuthorized(true);
+      } catch (error) {
+        console.error("Error checking auth:", error);
+        router.push("/login");
+      } finally {
+        setIsLoading(false);
       }
-    })();
+    };
 
-    const { data: sub } = supabase.auth.onAuthStateChange((_e, session) => {
-      setAuthed(!!session);
+    checkAuth();
+
+    // Escuchar cambios en la autenticación
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (!session) {
+        if (requiredRole === "organization") {
+          router.push("/org/login");
+        } else {
+          router.push("/login");
+        }
+      }
     });
 
     return () => {
-      sub.subscription.unsubscribe();
-      mounted = false;
+      subscription.unsubscribe();
     };
-  }, []);
+  }, [router, pathname, requiredRole]);
 
-  if (loading) return null; // puedes mostrar un spinner aquí
-  if (!authed) return <Navigate to="/login" state={{ from: location.pathname }} replace />;
-  return children;
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#FCFAF5]">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#134E4A] mx-auto mb-4"></div>
+          <p className="text-gray-600">Verificando acceso...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!isAuthorized) {
+    return null;
+  }
+
+  return <>{children}</>;
 }
