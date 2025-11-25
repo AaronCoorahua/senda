@@ -8,13 +8,14 @@ import { User, CheckCircle, School, GraduationCap } from 'lucide-react';
 import { getAllColegios, GRADOS } from '@/lib/colegios-db';
 
 interface NombreInputProps {
-  onComplete: (data: { nombre: string; colegioId: string; grado: string }) => void;
+  onComplete: (data: { nombre: string; colegioId: string; grado: string; aula: string }) => void;
 }
 
 const NombreInput: React.FC<NombreInputProps> = ({ onComplete }) => {
   const [nombre, setNombre] = useState('');
   const [colegioId, setColegioId] = useState('');
   const [grado, setGrado] = useState('');
+  const [aula, setAula] = useState('');
   const [colegios, setColegios] = useState<any[]>([]);
   const [isLoadingColegios, setIsLoadingColegios] = useState(true);
   const [error, setError] = useState('');
@@ -49,12 +50,18 @@ const NombreInput: React.FC<NombreInputProps> = ({ onComplete }) => {
       setError('Por favor selecciona tu grado');
       return;
     }
+
+    if (!aula.trim()) {
+      setError('Por favor ingresa tu aula');
+      return;
+    }
     
     setError('');
     onComplete({ 
       nombre: nombre.trim(), 
       colegioId, 
-      grado 
+      grado,
+      aula: aula.trim()
     });
   };
 
@@ -64,7 +71,7 @@ const NombreInput: React.FC<NombreInputProps> = ({ onComplete }) => {
     }
   };
 
-  const isFormValid = nombre.trim().length >= 3 && colegioId && grado;
+  const isFormValid = nombre.trim().length >= 3 && colegioId && grado && aula.trim().length > 0;
 
   return (
     <div className="min-h-screen flex items-center justify-center py-12" style={{ backgroundColor: '#FCFAF5' }}>
@@ -161,6 +168,29 @@ const NombreInput: React.FC<NombreInputProps> = ({ onComplete }) => {
                     </option>
                   ))}
                 </select>
+              </div>
+
+              {/* Aula */}
+              <div className="relative">
+                <Label htmlFor="aula" className="text-lg font-semibold mb-2 block" style={{ color: '#134E4A' }}>
+                  <School className="w-5 h-5 inline mr-2" />
+                  Tu aula o sección
+                </Label>
+                <Input
+                  id="aula"
+                  type="text"
+                  value={aula}
+                  onChange={(e) => {
+                    setAula(e.target.value);
+                    if (error) setError('');
+                  }}
+                  onKeyPress={handleKeyPress}
+                  placeholder="Ejemplo: A, B, Sección 1, etc."
+                  className="text-lg py-6 px-4 font-lato border-2 border-gray-300 focus:border-senda-primary rounded-xl"
+                />
+                {aula.trim().length > 0 && (
+                  <CheckCircle className="absolute right-4 top-12 w-6 h-6 text-green-500" />
+                )}
               </div>
 
               {error && (

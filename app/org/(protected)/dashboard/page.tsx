@@ -123,6 +123,7 @@ export default function OrgDashboard() {
   });
   const [atRiskStudents, setAtRiskStudents] = useState<AtRiskStudent[]>([]);
   const [gradeAlerts, setGradeAlerts] = useState<GradeCounts>(() => EMPTY_GRADE_COUNTS());
+  const [topCareers, setTopCareers] = useState<Array<{ name: string; percentage: number; color: string }>>([]);
   const [recentActivity, setRecentActivity] = useState<Array<{
     nombre: string;
     action: string;
@@ -207,6 +208,7 @@ export default function OrgDashboard() {
         setRealStats({ totalStudents: 0, completedTests: 0, pendingStudents: 0 });
         setAtRiskStudents([]);
         setGradeAlerts(EMPTY_GRADE_COUNTS());
+        setTopCareers([]);
         setRecentActivity([]);
         return;
       }
@@ -291,6 +293,7 @@ export default function OrgDashboard() {
       setGradeAlerts(activeGradeCounts);
 
       await loadRecentActivity(runs, estudiantes);
+      await loadTopCareers(estudiantesIds);
 
       setRealStats({
         totalStudents,
@@ -299,6 +302,60 @@ export default function OrgDashboard() {
       });
     } catch (error) {
       console.error('Error cargando estadísticas:', error);
+    }
+  };
+
+  const loadTopCareers = async (estudiantesIds: string[]) => {
+    try {
+      // Obtener test_results de los estudiantes del colegio
+      const { data: testResults, error } = await supabase
+        .from('test_results')
+        .select('score_json')
+        .in('user_id', estudiantesIds);
+
+      if (error) {
+        console.error('Error obteniendo test_results:', error);
+        setTopCareers([]);
+        return;
+      }
+
+      if (!testResults || testResults.length === 0) {
+        setTopCareers([]);
+        return;
+      }
+
+      // Contar carreras recomendadas
+      const careerCounts = new Map<string, number>();
+      
+      testResults.forEach((result) => {
+        const scoreJson = result.score_json as any;
+        const careers = scoreJson?.recommended_careers || scoreJson?.profileData?.carreras || [];
+        
+        careers.forEach((career: string) => {
+          if (career) {
+            careerCounts.set(career, (careerCounts.get(career) || 0) + 1);
+          }
+        });
+      });
+
+      // Ordenar por cantidad y tomar top 3
+      const sortedCareers = Array.from(careerCounts.entries())
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 3);
+
+      const total = testResults.length;
+      const colors = ['bg-blue-500', 'bg-green-500', 'bg-purple-500'];
+
+      const topCareersData = sortedCareers.map(([name, count], index) => ({
+        name,
+        percentage: Math.round((count / total) * 100),
+        color: colors[index] || 'bg-gray-500',
+      }));
+
+      setTopCareers(topCareersData);
+    } catch (error) {
+      console.error('Error calculando top carreras:', error);
+      setTopCareers([]);
     }
   };
 
@@ -364,10 +421,24 @@ export default function OrgDashboard() {
 
   const logo = getLogo();
 
-  // Combinar datos mock con datos reales de la base de datos
-  const totalStudentsCount = 482 + realStats.totalStudents;
-  const completedTestsCount = 324 + realStats.completedTests;
-  const pendingTestsCount = 158 + realStats.pendingStudents; // Mock pendientes + reales
+  // Determinar si usar datos mock (solo para San Agustín y Saco Oliveros)
+  const shouldUseMockData = () => {
+    const nombreLower = colegioNombre.toLowerCase();
+    return nombreLower.includes('san agustín') || 
+           nombreLower.includes('san agustin') || 
+           nombreLower.includes('saco oliveros');
+  };
+
+  const useMock = shouldUseMockData();
+
+  // Combinar datos mock con datos reales solo para colegios específicos
+  const mockBaseStudents = useMock ? 482 : 0;
+  const mockBaseCompleted = useMock ? 324 : 0;
+  const mockBasePending = useMock ? 158 : 0;
+
+  const totalStudentsCount = mockBaseStudents + realStats.totalStudents;
+  const completedTestsCount = mockBaseCompleted + realStats.completedTests;
+  const pendingTestsCount = mockBasePending + realStats.pendingStudents;
   
   // Calcular tasa de completado real basada en tests (no en estudiantes)
   const totalTests = completedTestsCount + pendingTestsCount;
@@ -377,18 +448,21 @@ export default function OrgDashboard() {
 
   const atRiskDisplay: AtRiskStudent[] = (() => {
     const combined = [...atRiskStudents];
-    DEFAULT_AT_RISK_STUDENTS.forEach(student => {
-      if (!combined.some(existing => existing.name === student.name)) {
-        combined.push(student);
-      }
-    });
+    // Solo agregar estudiantes mock si es un colegio con datos mock
+    if (useMock) {
+      DEFAULT_AT_RISK_STUDENTS.forEach(student => {
+        if (!combined.some(existing => existing.name === student.name)) {
+          combined.push(student);
+        }
+      });
+    }
     return combined.slice(0, 4);
   })();
 
   const gradeCards = SECONDARY_GRADES.map(({ key, label }) => ({
     key,
     label,
-    pending: DEFAULT_GRADE_COUNTS[key] + (gradeAlerts[key] || 0),
+    pending: (useMock ? DEFAULT_GRADE_COUNTS[key] : 0) + (gradeAlerts[key] || 0),
   }));
 
   const stats = {
@@ -396,30 +470,24 @@ export default function OrgDashboard() {
     completedTests: completedTestsCount,
     completionRate: completionRateReal, // Calculado en base a tests completados vs pendientes
     pendingStudents: pendingTestsCount,
-    topCareers: [
-      { name: 'Ingeniería', percentage: 40, color: 'bg-blue-500' },
-      { name: 'Salud', percentage: 35, color: 'bg-green-500' },
-      { name: 'Artes', percentage: 25, color: 'bg-purple-500' },
-    ],
-    // Combinar actividad mock con actividad real
+    // Mostrar carreras mock solo para San Agustín y Saco Oliveros, de lo contrario datos reales
+    topCareers: useMock 
+      ? [
+          { name: 'Ingeniería', percentage: 40, color: 'bg-blue-500' },
+          { name: 'Salud', percentage: 35, color: 'bg-green-500' },
+          { name: 'Artes', percentage: 25, color: 'bg-purple-500' },
+        ]
+      : topCareers,
+    // Combinar actividad mock con actividad real solo para colegios específicos
     recentActivity: [
       ...recentActivity,
-      ...(recentActivity.length < 3 ? [
+      ...(useMock && recentActivity.length < 3 ? [
         { nombre: 'María García', action: 'completó el test', time: 'Hace 2 horas', status: 'completed' },
         { nombre: 'Juan Pérez', action: 'completó el test', time: 'Hace 5 horas', status: 'completed' },
         { nombre: 'Ana López', action: 'completó el test', time: 'Ayer', status: 'completed' },
       ] : [])
     ].slice(0, 5), // Máximo 5 items
     atRiskStudents: atRiskDisplay,
-    cohortComparison: {
-      year2024: { stem: 55, arts: 25, health: 20 },
-      year2025: { stem: 60, arts: 20, health: 20 },
-    },
-    yearTrends: [
-      { area: 'STEM', percentage: 60, change: '+5%', trend: 'up' },
-      { area: 'Artes', percentage: 20, change: '-5%', trend: 'down' },
-      { area: 'Salud', percentage: 20, change: '0%', trend: 'stable' },
-    ],
   };
 
   return (
@@ -544,74 +612,6 @@ export default function OrgDashboard() {
           </CardContent>
         </Card>
       </div>
-
-      {/* Cohort Comparison */}
-      <Card className="bg-white shadow-md">
-        <CardHeader>
-          <CardTitle className="text-xl text-[#134E4A]">Comparativo de Promociones</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-6">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="text-center p-4 bg-blue-50 rounded-lg">
-                <p className="text-sm text-gray-600 mb-2">Promoción 2024</p>
-                <div className="space-y-2">
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm">STEM</span>
-                    <span className="font-bold text-blue-600">{stats.cohortComparison.year2024.stem}%</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm">Artes</span>
-                    <span className="font-bold text-purple-600">{stats.cohortComparison.year2024.arts}%</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm">Salud</span>
-                    <span className="font-bold text-green-600">{stats.cohortComparison.year2024.health}%</span>
-                  </div>
-                </div>
-              </div>
-              
-              <div className="text-center p-4 bg-green-50 rounded-lg">
-                <p className="text-sm text-gray-600 mb-2">Promoción 2025</p>
-                <div className="space-y-2">
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm">STEM</span>
-                    <span className="font-bold text-blue-600">{stats.cohortComparison.year2025.stem}%</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm">Artes</span>
-                    <span className="font-bold text-purple-600">{stats.cohortComparison.year2025.arts}%</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm">Salud</span>
-                    <span className="font-bold text-green-600">{stats.cohortComparison.year2025.health}%</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-            
-            <div className="p-4 bg-gradient-to-r from-blue-50 to-green-50 rounded-lg border-2 border-blue-200">
-              <p className="font-semibold text-[#134E4A] mb-2">📊 Tendencias 2025</p>
-              <div className="space-y-2">
-                {stats.yearTrends.map((trend, index) => (
-                  <div key={index} className="flex items-center justify-between">
-                    <div className="flex items-center space-x-2">
-                      <span className="text-sm font-medium">{trend.area}</span>
-                      <Badge className={
-                        trend.trend === 'up' ? 'bg-green-500' : 
-                        trend.trend === 'down' ? 'bg-red-500' : 'bg-gray-500'
-                      }>
-                        {trend.change}
-                      </Badge>
-                    </div>
-                    <span className="font-bold text-[#134E4A]">{trend.percentage}%</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
 
       {/* At-Risk Students Alert */}
       <Card className="bg-red-50 border-red-200 shadow-md">

@@ -40,6 +40,7 @@ export async function updateStudentInfo(data: {
   nombre: string;
   colegioId: string;
   grado: string;
+  aula: string;
 }) {
   const user_id = await getUid();
   if (!user_id) throw new Error("No hay usuario logueado");
@@ -50,6 +51,7 @@ export async function updateStudentInfo(data: {
       nombre: data.nombre,
       colegio_id: data.colegioId,
       grado: data.grado,
+      aula: data.aula,
     })
     .eq("id", user_id);
 

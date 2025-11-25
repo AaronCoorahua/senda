@@ -4,18 +4,27 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { Compass, Target, ArrowRight, Star, BookOpen, Heart, Lightbulb, Search, BarChart3, Award, Users, Brain, Map, Trophy, Rocket, Zap, LogOut, Linkedin } from "lucide-react";
+import { Compass, Target, ArrowRight, Star, BookOpen, Heart, Lightbulb, Search, BarChart3, Award, Users, Brain, Map, Trophy, Rocket, Zap, LogOut, LogIn, Linkedin } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState, Suspense } from "react";
 import CareerExplorer from "@/components/CareerExplorer";
+import { supabase } from "@/integrations/supabase/client";
 
 function HomeContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const careerSectionRef = useRef<HTMLDivElement>(null);
   const [shouldFilterByProfile, setShouldFilterByProfile] = useState<string | null>(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   useEffect(() => {
+    // Check authentication status
+    const checkAuth = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      setIsAuthenticated(!!user);
+    };
+    checkAuth();
+
     // Verificar si viene del test con parámetro de scroll
     const scrollToCarreras = searchParams.get('scrollToCarreras');
     const filterByProfile = searchParams.get('filterByProfile');
@@ -75,8 +84,17 @@ function HomeContent() {
                 variant="outline"
                 className="border-red-300 text-red-600 hover:bg-red-50 hover:text-red-700 font-lato font-semibold px-4 py-2 rounded-xl transition-all duration-300"
               >
-                <LogOut className="w-4 h-4 mr-2" />
-                Salir
+                {isAuthenticated ? (
+                  <>
+                    <LogOut className="w-4 h-4 mr-2" />
+                    Salir
+                  </>
+                ) : (
+                  <>
+                    <LogIn className="w-4 h-4 mr-2" />
+                    Entrar
+                  </>
+                )}
               </Button>
             </nav>
           </div>

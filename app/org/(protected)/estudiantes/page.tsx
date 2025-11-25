@@ -174,6 +174,8 @@ export default function OrgStudents() {
   const [selectedStudent, setSelectedStudent] = useState<OrgStudent | null>(null);
   const [sendingToParents, setSendingToParents] = useState(false);
   const [sendSuccess, setSendSuccess] = useState(false);
+  const [colegioNombre, setColegioNombre] = useState<string>('');
+  const [useMock, setUseMock] = useState(false);
 
   useEffect(() => {
     loadStudents();
@@ -196,9 +198,25 @@ export default function OrgStudents() {
         return;
       }
 
+      // Fetch school name
+      const { data: colegioData } = await supabase
+        .from('colegios')
+        .select('nombre')
+        .eq('id', adminData.colegio_id)
+        .single();
+
+      const schoolName = colegioData?.nombre || '';
+      setColegioNombre(schoolName);
+
+      // Check if should use mock data
+      const shouldUseMock = schoolName.toLowerCase().includes('san agustín') || 
+                           schoolName.toLowerCase().includes('san agustin') || 
+                           schoolName.toLowerCase().includes('saco oliveros');
+      setUseMock(shouldUseMock);
+
       const { data: studentRows, error: studentsError } = await supabase
         .from('usuarios')
-        .select('id, nombre, username, grado, journey_progress, tipo_usuario')
+        .select('id, nombre, username, grado, aula, journey_progress, tipo_usuario')
         .eq('colegio_id', adminData.colegio_id)
         .neq('tipo_usuario', 'colegio');
 
@@ -235,7 +253,7 @@ export default function OrgStudents() {
           firstName,
           lastName,
           grade: student.grado || 'Sin grado',
-          classroom: buildClassroomLabel(student.grado, index),
+          classroom: student.aula || buildClassroomLabel(student.grado, index),
           status: deriveStatus(journey),
           email: student.username || null,
           journeyProgress: journey,
@@ -244,7 +262,7 @@ export default function OrgStudents() {
         };
       });
 
-      const combinedStudents = [...mappedStudents, ...MOCK_STUDENTS_TABLE];
+      const combinedStudents = shouldUseMock ? [...mappedStudents, ...MOCK_STUDENTS_TABLE] : mappedStudents;
       setStudents(combinedStudents);
     } catch (error) {
       console.error('Error cargando estudiantes:', error);
@@ -353,25 +371,6 @@ export default function OrgStudents() {
           <CardTitle className="text-xl text-[#134E4A]">Lista de Estudiantes</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex flex-wrap gap-3 mb-4">
-            {students.slice(0, 6).map((student) => (
-              <div key={student.id} className="px-3 py-2 bg-gray-50 rounded-lg border text-sm text-gray-700">
-                {student.firstName} {student.lastName}
-              </div>
-            ))}
-            {!students.length && (
-              <div className="text-sm text-gray-500">No hay estudiantes registrados todavía.</div>
-            )}
-          </div>
-
-          <div className="flex flex-wrap gap-3 mb-6">
-            {MOCK_STUDENT_NAMES.map((name) => (
-              <div key={name} className="px-3 py-1.5 bg-white border border-dashed rounded-full text-xs text-gray-500">
-                {name}
-              </div>
-            ))}
-          </div>
-
           <div className="flex flex-col md:flex-row gap-4 mb-6">
             <div className="flex-1 relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
@@ -467,9 +466,16 @@ export default function OrgStudents() {
             )}
           </div>
 
-          <div className="mt-4 text-sm text-gray-600">
-            Mostrando 20 de 520 estudiantes
-          </div>
+          {useMock && (
+            <div className="mt-4 text-sm text-gray-600">
+              Mostrando 20 de 520 estudiantes
+            </div>
+          )}
+          {!useMock && students.length > 0 && (
+            <div className="mt-4 text-sm text-gray-600">
+              Mostrando {students.length} estudiante{students.length !== 1 ? 's' : ''}
+            </div>
+          )}
         </CardContent>
       </Card>
 
@@ -486,121 +492,159 @@ export default function OrgStudents() {
                 </p>
               </DialogHeader>
 
-              <div className="bg-gradient-to-r from-[#134E4A] to-[#10B981] text-white p-6 rounded-2xl shadow-lg">
-                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                  <div>
-                    <p className="text-sm uppercase tracking-widest text-white/80">Perfil vocacional</p>
-                    <p className="text-3xl font-semibold">
-                      {selectedStudent.profileType || 'Explorador STEM'}
-                    </p>
-                    <p className="text-white/80 text-sm">
-                      Estado: {selectedStudent.status === 'completado' ? 'Proceso finalizado' : 'En progreso'}
-                    </p>
-                  </div>
-                  <div className="bg-white/15 px-4 py-3 rounded-xl text-sm">
-                    <p className="uppercase text-white/70 text-xs">Próximo hito</p>
-                    <p className="text-lg font-semibold">
-                      {(() => {
-                        const journey = selectedStudent.journeyProgress;
-                        if (!journey) return 'Iniciar Test Vocacional';
-                        const currentPhase = journey.current_phase;
-                        if (currentPhase === 'test' && journey.phases.test.status !== 'completed') return 'Completar Test Vocacional';
-                        if (currentPhase === 'test' && journey.phases.test.status === 'completed') return 'Explorar Carreras';
-                        if (currentPhase === 'carreras' && journey.phases.carreras.status !== 'completed') return 'Explorar Carreras';
-                        if (currentPhase === 'carreras' && journey.phases.carreras.status === 'completed') return 'Mini Reto Práctico';
-                        if (currentPhase === 'mini_reto' && journey.phases.mini_reto.status !== 'completed') return 'Mini Reto Práctico';
-                        if (currentPhase === 'mini_reto' && journey.phases.mini_reto.status === 'completed') return 'LinkedIn Inteligente';
-                        if (currentPhase === 'linkedin' && journey.phases.linkedin.status !== 'completed') return 'LinkedIn Inteligente';
-                        return 'Journey Completo';
-                      })()}
-                    </p>
-                    <p className="text-white/80 text-xs">Plan personalizado listo para compartir</p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="bg-gray-50 p-4 rounded-lg">
-                <p className="text-sm font-semibold text-gray-700 mb-2">Puntuaciones por Dimensión</p>
-                <div className="space-y-3">
-                  {DIMENSIONS.map((dimension) => (
-                    <div key={dimension}>
-                      <div className="flex justify-between text-sm text-gray-600 mb-1">
-                        <span>{dimension}</span>
-                        <span className="font-semibold text-[#134E4A]">{selectedStudent.scores[dimension] ?? 0}%</span>
-                      </div>
-                      <Progress value={selectedStudent.scores[dimension] ?? 0} className="h-2" />
+              {selectedStudent.status !== 'completado' ? (
+                <div className="bg-gradient-to-br from-yellow-50 to-orange-50 p-12 rounded-2xl border-4 border-yellow-200 shadow-xl text-center">
+                  <div className="flex flex-col items-center space-y-6">
+                    <div className="w-24 h-24 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full flex items-center justify-center shadow-lg">
+                      <Loader2 className="w-12 h-12 text-white animate-spin" />
                     </div>
-                  ))}
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Card className="bg-white border">
-                  <CardHeader>
-                    <CardTitle className="text-lg text-[#134E4A]">Recomendaciones para Apoderados</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <ol className="list-decimal pl-5 space-y-2 text-gray-700 text-sm">
-                      {DEFAULT_RECOMMENDATIONS.map((item, index) => (
-                        <li key={index}>{item}</li>
-                      ))}
-                    </ol>
-                  </CardContent>
-                </Card>
-
-                <Card className="bg-white border">
-                  <CardHeader>
-                    <CardTitle className="text-lg text-[#134E4A]">Próximos Eventos Relacionados</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-3">
-                    {DEFAULT_EVENTS.map((event, index) => (
-                      <div key={index} className="p-3 rounded-lg border text-sm">
-                        <p className="font-semibold text-[#134E4A]">{event.title}</p>
-                        <p className="text-gray-600">{event.location}</p>
-                        <p className="text-xs text-gray-500 mb-2">{event.date}</p>
-                        <Button variant="outline" size="sm">Más info</Button>
+                    <div className="space-y-3">
+                      <h3 className="text-3xl font-bold text-gray-800">
+                        {selectedStudent.status === 'en_proceso' ? 'Test en Proceso' : 'Test Pendiente'}
+                      </h3>
+                      <p className="text-lg text-gray-600 max-w-md">
+                        {selectedStudent.status === 'en_proceso' 
+                          ? 'El estudiante está completando su test vocacional. Los resultados estarán disponibles una vez que termine todas las fases.'
+                          : 'El estudiante aún no ha iniciado su test vocacional. Invítalo a comenzar su journey de descubrimiento.'}
+                      </p>
+                      <div className="pt-4">
+                        <div className="inline-flex items-center space-x-2 bg-white px-6 py-3 rounded-full shadow-md">
+                          <span className="text-sm font-semibold text-gray-700">Próximo paso:</span>
+                          <span className="text-sm font-bold text-[#10B981]">
+                            {(() => {
+                              const journey = selectedStudent.journeyProgress;
+                              if (!journey) return 'Iniciar Test Vocacional';
+                              const currentPhase = journey.current_phase;
+                              if (currentPhase === 'test' && journey.phases.test.status !== 'completed') return 'Completar Test Vocacional';
+                              if (currentPhase === 'test' && journey.phases.test.status === 'completed') return 'Explorar Carreras';
+                              if (currentPhase === 'carreras' && journey.phases.carreras.status !== 'completed') return 'Explorar Carreras';
+                              if (currentPhase === 'carreras' && journey.phases.carreras.status === 'completed') return 'Mini Reto Práctico';
+                              if (currentPhase === 'mini_reto' && journey.phases.mini_reto.status !== 'completed') return 'Mini Reto Práctico';
+                              if (currentPhase === 'mini_reto' && journey.phases.mini_reto.status === 'completed') return 'LinkedIn Inteligente';
+                              if (currentPhase === 'linkedin' && journey.phases.linkedin.status !== 'completed') return 'LinkedIn Inteligente';
+                              return 'Journey Completo';
+                            })()}
+                          </span>
+                        </div>
                       </div>
-                    ))}
-                  </CardContent>
-                </Card>
-              </div>
-
-              <div className="sticky bottom-0 bg-white pt-4 pb-2 border-t mt-6">
-                <div className="flex flex-wrap gap-3 justify-end">
-                  <Button
-                    variant="outline"
-                    size="lg"
-                    className="border-[#134E4A] text-[#134E4A] hover:bg-[#134E4A] hover:text-white"
-                    onClick={handlePrintReport}
-                  >
-                    <Printer className="h-4 w-4 mr-2" />
-                    Imprimir reporte
-                  </Button>
-                  <Button
-                    size="lg"
-                    className="bg-[#10B981] hover:bg-[#0e8c6b] min-w-[200px]"
-                    onClick={handleSendToParents}
-                    disabled={sendingToParents}
-                  >
-                    {sendingToParents ? (
-                      <>
-                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                        Enviando...
-                      </>
-                    ) : sendSuccess ? (
-                      <>
-                        <CheckCircle2 className="h-4 w-4 mr-2" />
-                        Enviado a padres
-                      </>
-                    ) : (
-                      <>
-                        <Send className="h-4 w-4 mr-2" />
-                        Enviar a padres
-                      </>
-                    )}
-                  </Button>
+                    </div>
+                  </div>
                 </div>
-              </div>
+              ) : (
+                <div className="bg-gradient-to-br from-[#134E4A] via-[#0f6b5a] to-[#10B981] p-10 rounded-3xl shadow-2xl">
+                  {/* Header Section */}
+                  <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6 mb-8 pb-8 border-b-2 border-white/20">
+                    <div className="space-y-3">
+                      <p className="text-xs uppercase tracking-widest text-white/70 font-bold">Perfil Vocacional</p>
+                      <h2 className="text-5xl font-black text-white drop-shadow-2xl">
+                        {selectedStudent.profileType || 'Explorador STEM'}
+                      </h2>
+                      <div className="flex items-center gap-2">
+                        <div className="w-3 h-3 bg-green-400 rounded-full animate-pulse"></div>
+                        <p className="text-white/90 text-base font-semibold">
+                          Proceso finalizado ✓
+                        </p>
+                      </div>
+                    </div>
+                    <div className="bg-white/20 backdrop-blur-lg px-8 py-6 rounded-2xl border-2 border-white/40 shadow-2xl">
+                      <p className="uppercase text-white/80 text-xs font-bold mb-2">Siguiente Hito</p>
+                      <p className="text-2xl font-bold text-white">
+                        Journey Completo 🎉
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Scores Section */}
+                  <div className="mb-8 pb-8 border-b-2 border-white/20">
+                    <h3 className="text-2xl font-bold text-white mb-6 flex items-center">
+                      <span className="w-3 h-3 bg-yellow-400 rounded-full mr-3"></span>
+                      Puntuaciones por Dimensión
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {DIMENSIONS.map((dimension) => (
+                        <div key={dimension} className="bg-white/10 backdrop-blur-sm p-4 rounded-xl border border-white/20">
+                          <div className="flex justify-between items-center mb-2">
+                            <span className="text-white font-semibold text-sm">{dimension}</span>
+                            <span className="text-yellow-300 font-black text-lg">{selectedStudent.scores[dimension] ?? 0}%</span>
+                          </div>
+                          <div className="w-full bg-white/20 rounded-full h-3 overflow-hidden">
+                            <div 
+                              className="bg-gradient-to-r from-yellow-300 to-green-400 h-full rounded-full transition-all duration-500"
+                              style={{ width: `${selectedStudent.scores[dimension] ?? 0}%` }}
+                            ></div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Recommendations & Events Grid */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                    <div className="bg-white/10 backdrop-blur-sm p-6 rounded-2xl border border-white/20">
+                      <h3 className="text-xl font-bold text-white mb-4 flex items-center">
+                        <span className="w-3 h-3 bg-blue-400 rounded-full mr-3"></span>
+                        Recomendaciones para Apoderados
+                      </h3>
+                      <ol className="list-decimal pl-6 space-y-3 text-white/90 text-sm">
+                        {DEFAULT_RECOMMENDATIONS.map((item, index) => (
+                          <li key={index} className="leading-relaxed">{item}</li>
+                        ))}
+                      </ol>
+                    </div>
+
+                    <div className="bg-white/10 backdrop-blur-sm p-6 rounded-2xl border border-white/20">
+                      <h3 className="text-xl font-bold text-white mb-4 flex items-center">
+                        <span className="w-3 h-3 bg-purple-400 rounded-full mr-3"></span>
+                        Próximos Eventos Relacionados
+                      </h3>
+                      <div className="space-y-3">
+                        {DEFAULT_EVENTS.map((event, index) => (
+                          <div key={index} className="bg-white/10 p-4 rounded-xl border border-white/20 hover:bg-white/20 transition-all">
+                            <p className="font-bold text-white text-sm mb-1">{event.title}</p>
+                            <p className="text-white/80 text-xs mb-1">{event.location}</p>
+                            <p className="text-white/60 text-xs">{event.date}</p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Action Buttons */}
+                  <div className="flex flex-wrap gap-4 justify-center pt-6 border-t-2 border-white/20">
+                    <Button
+                      size="lg"
+                      className="bg-white text-[#134E4A] hover:bg-white/90 font-bold shadow-xl px-8 py-6 text-lg"
+                      onClick={handlePrintReport}
+                    >
+                      <Printer className="h-5 w-5 mr-3" />
+                      Imprimir Reporte
+                    </Button>
+                    <Button
+                      size="lg"
+                      className="bg-gradient-to-r from-yellow-400 to-orange-500 hover:from-yellow-500 hover:to-orange-600 text-white font-bold shadow-xl px-8 py-6 text-lg"
+                      onClick={handleSendToParents}
+                      disabled={sendingToParents}
+                    >
+                      {sendingToParents ? (
+                        <>
+                          <Loader2 className="h-5 w-5 mr-3 animate-spin" />
+                          Enviando...
+                        </>
+                      ) : sendSuccess ? (
+                        <>
+                          <CheckCircle2 className="h-5 w-5 mr-3" />
+                          Enviado ✓
+                        </>
+                      ) : (
+                        <>
+                          <Send className="h-5 w-5 mr-3" />
+                          Enviar a Padres
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </DialogContent>
