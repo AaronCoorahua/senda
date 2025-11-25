@@ -415,9 +415,20 @@ function LinkedInInteligenteContent() {
             <h1 className="text-4xl font-montserrat font-bold text-gray-900 mb-4">
               LinkedIn Inteligente 🚀
             </h1>
-            <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
+            <p className="text-xl text-gray-600 mb-4 max-w-2xl mx-auto">
               Construye tu presencia profesional en LinkedIn con IA. Te ayudaremos a crear un perfil optimizado basado en tu perfil vocacional de Senda.
             </p>
+            <div className="bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 rounded-xl p-6 max-w-2xl mx-auto mb-8">
+              <div className="flex items-center justify-center gap-3 mb-3">
+                <Sparkles className="w-6 h-6 text-green-600 animate-pulse" />
+                <h3 className="text-lg font-bold text-green-800">La forma más sencilla de conectar con profesionales</h3>
+              </div>
+              <p className="text-green-700 text-base leading-relaxed">
+                LinkedIn es la red social profesional más grande del mundo, con más de 900 millones de usuarios. 
+                Es la plataforma ideal para construir tu marca personal, conectar con profesionales de tu área, 
+                y descubrir oportunidades laborales. Con nuestro asistente IA, crear tu perfil optimizado es más fácil que nunca.
+              </p>
+            </div>
 
             <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4 mb-12">
               <Card className="bg-white shadow-lg hover:shadow-2xl transition-all transform hover:scale-105 hover:-rotate-1 animate-fade-in">

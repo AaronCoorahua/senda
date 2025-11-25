@@ -229,8 +229,8 @@ export async function saveFinalResult(
     user_id,
     run_id: runId,
     profile_type: profileType,
-    strengths: strengths.join(","),
-    recommended_careers: recommendedCareers.join(","),
+    strengths: strengths, // Guardar como array directamente
+    recommended_careers: recommendedCareers, // Guardar como array directamente
     score_json: scoreJson,
     created_at: new Date().toISOString(),
   });

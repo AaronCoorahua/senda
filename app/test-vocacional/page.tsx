@@ -182,41 +182,48 @@ function TestVocacionalContent() {
         
         console.log("🔍 Journey progress cargado:", journeyProgress);
         
-        // 2. Si el test está completado, redirigir según la fase actual
-        if (journeyProgress && journeyProgress.phases.test.status === 'completed') {
+        // 2. Redirigir según la fase actual del journey
+        if (journeyProgress) {
           const currentPhase = journeyProgress.current_phase;
+          const testStatus = journeyProgress.phases.test.status;
           const linkedinPhaseStatus = journeyProgress.phases.linkedin.status;
           
-          console.log("✅ Test completado, current_phase:", currentPhase);
+          console.log("📍 Current phase:", currentPhase, "| Test status:", testStatus);
           
-          // Obtener el último resultado para obtener el profileId
-          const { data: latestResult } = await supabase
-            .from("test_results")
-            .select("score_json")
-            .eq("user_id", (await supabase.auth.getUser()).data.user?.id)
-            .order("created_at", { ascending: false })
-            .limit(1)
-            .maybeSingle();
-          
-          const profileId = latestResult?.score_json?.profileData?.id;
-          
-          console.log("👤 ProfileId obtenido:", profileId);
-          
-          // Redirigir según la fase actual del journey - solo si NO estamos en modo test
-          if (currentPhase === 'carreras' && profileId) {
-            console.log("➡️ Redirigiendo a carreras con profile:", profileId);
-            router.push(`/carreras?profile=${profileId}`);
-            return;
-          } else if (currentPhase === 'mini_reto' && profileId) {
-            console.log("➡️ Redirigiendo a mini-reto con profile:", profileId);
-            router.push(`/mini-reto?profile=${profileId}`);
-            return;
-          } else if (currentPhase === 'linkedin' && profileId) {
-            const isLinkedInCompleted = linkedinPhaseStatus === 'completed';
-            const stepSuffix = isLinkedInCompleted ? '&step=profesionales' : '';
-            console.log("➡️ Redirigiendo a linkedin con profile:", profileId, "step:", stepSuffix);
-            router.push(`/linkedin-inteligente?profile=${profileId}${stepSuffix}`);
-            return;
+          // Si el test está completado, obtener el profileId para las redirecciones
+          if (testStatus === 'completed') {
+            const { data: latestResult } = await supabase
+              .from("test_results")
+              .select("score_json")
+              .eq("user_id", (await supabase.auth.getUser()).data.user?.id)
+              .order("created_at", { ascending: false })
+              .limit(1)
+              .maybeSingle();
+            
+            const profileId = latestResult?.score_json?.profileData?.id;
+            console.log("👤 ProfileId obtenido:", profileId);
+            
+            // Redirigir según current_phase
+            if (currentPhase === 'carreras' && profileId) {
+              console.log("➡️ Redirigiendo a /carreras");
+              router.push(`/carreras?profile=${profileId}`);
+              return;
+            } else if (currentPhase === 'mini_reto' && profileId) {
+              console.log("➡️ Redirigiendo a /mini-reto");
+              router.push(`/mini-reto?profile=${profileId}`);
+              return;
+            } else if (currentPhase === 'linkedin' && profileId) {
+              // Si linkedin está completed, ir a profesionales, sino a la página inicial
+              const isLinkedInCompleted = linkedinPhaseStatus === 'completed';
+              if (isLinkedInCompleted) {
+                console.log("➡️ Redirigiendo a /linkedin-inteligente paso profesionales");
+                router.push(`/linkedin-inteligente?profile=${profileId}&step=profesionales`);
+              } else {
+                console.log("➡️ Redirigiendo a /linkedin-inteligente");
+                router.push(`/linkedin-inteligente?profile=${profileId}`);
+              }
+              return;
+            }
           }
         }
         
