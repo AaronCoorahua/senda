@@ -49,7 +49,7 @@ export default function ProtectedRoute({ children, requiredRole }: ProtectedRout
           }
 
           if (requiredRole === "student" && userData.tipo_usuario === "colegio") {
-            router.push("/org/login");
+            router.push("/org/dashboard");
             return;
           }
         }

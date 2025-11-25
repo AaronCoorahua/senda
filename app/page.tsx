@@ -4,15 +4,36 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { Compass, Target, ArrowRight, Star, BookOpen, Heart, Lightbulb, Search, BarChart3, Award, Users, Brain, Map, Trophy, Rocket, Zap } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { Compass, Target, ArrowRight, Star, BookOpen, Heart, Lightbulb, Search, BarChart3, Award, Users, Brain, Map, Trophy, Rocket, Zap, LogOut, Linkedin } from "lucide-react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import CareerExplorer from "@/components/CareerExplorer";
 
 export default function Home() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const careerSectionRef = useRef<HTMLDivElement>(null);
   const [shouldFilterByProfile, setShouldFilterByProfile] = useState<string | null>(null);
+
+  useEffect(() => {
+    // Verificar si viene del test con parámetro de scroll
+    const scrollToCarreras = searchParams.get('scrollToCarreras');
+    const filterByProfile = searchParams.get('filterByProfile');
+
+    if (scrollToCarreras === 'true' && careerSectionRef.current) {
+      // Scroll suave a la sección de carreras
+      setTimeout(() => {
+        careerSectionRef.current?.scrollIntoView({ 
+          behavior: 'smooth',
+          block: 'start'
+        });
+      }, 100);
+    }
+
+    if (filterByProfile) {
+      setShouldFilterByProfile(filterByProfile);
+    }
+  }, [searchParams]);
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: '#FCFAF5' }}>
@@ -48,6 +69,14 @@ export default function Home() {
                 className="ml-4 bg-[#10B981] hover:bg-[#059669] text-white font-lato font-semibold px-6 py-2 rounded-xl transition-all duration-300 shadow-md hover:shadow-lg"
               >
                 Ingresar como Colegio
+              </Button>
+              <Button 
+                onClick={() => router.push('/login')}
+                variant="outline"
+                className="border-red-300 text-red-600 hover:bg-red-50 hover:text-red-700 font-lato font-semibold px-4 py-2 rounded-xl transition-all duration-300"
+              >
+                <LogOut className="w-4 h-4 mr-2" />
+                Salir
               </Button>
             </nav>
           </div>
@@ -192,30 +221,7 @@ export default function Home() {
               </CardContent>
             </Card>
 
-            {/* Card 2: Explorador de carreras */}
-            <Card className="group bg-gradient-to-br from-purple-50 to-pink-100 border-2 border-purple-200 hover:border-purple-300 shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105 hover:-rotate-1 cursor-pointer">
-              <CardContent className="p-8 sm:p-10 text-center">
-                <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-gradient-to-br from-purple-500 to-pink-600 flex items-center justify-center group-hover:animate-bounce">
-                  <Map className="w-10 h-10 text-white" />
-                </div>
-                <h3 className="text-2xl sm:text-3xl font-montserrat font-bold text-senda-primary mb-4">
-                  🗺️ Explora 40+ carreras con datos reales
-                </h3>
-                <p className="text-base sm:text-lg text-gray-700 font-lato mb-6 leading-relaxed">
-                  Salario promedio, dónde estudiar, campo laboral, estilo de vida, propósito e impacto. 
-                  Información actualizada y testimonios reales.
-                </p>
-                <Button
-                  onClick={() => careerSectionRef.current?.scrollIntoView({ behavior: 'smooth' })}
-                  className="bg-purple-600 hover:bg-purple-700 text-white px-8 py-4 rounded-xl font-montserrat font-semibold text-lg transition-all duration-300 group-hover:scale-110"
-                >
-                  <BookOpen className="w-5 h-5 mr-2" />
-                  Ver Explorador
-                </Button>
-              </CardContent>
-            </Card>
-
-            {/* Card 3: Recomendaciones personalizadas */}
+            {/* Card 2: Recomendaciones personalizadas */}
             <Card className="group bg-gradient-to-br from-green-50 to-emerald-100 border-2 border-green-200 hover:border-green-300 shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105 hover:rotate-1 cursor-pointer">
               <CardContent className="p-8 sm:p-10 text-center">
                 <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center group-hover:animate-bounce">
@@ -229,10 +235,33 @@ export default function Home() {
                   por mundos completados. Dashboard personalizado incluido.
                 </p>
                 <Button
+                  onClick={() => router.push('/test-vocacional')}
                   className="bg-green-600 hover:bg-green-700 text-white px-8 py-4 rounded-xl font-montserrat font-semibold text-lg transition-all duration-300 group-hover:scale-110"
                 >
                   <Award className="w-5 h-5 mr-2" />
                   Descubre tus resultados
+                </Button>
+              </CardContent>
+            </Card>
+
+            {/* Card 3: LinkedIn Inteligente */}
+            <Card className="group bg-gradient-to-br from-purple-50 to-pink-100 border-2 border-purple-200 hover:border-purple-300 shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105 hover:rotate-1 cursor-pointer">
+              <CardContent className="p-8 sm:p-10 text-center">
+                <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-gradient-to-br from-purple-500 to-pink-600 flex items-center justify-center group-hover:animate-bounce">
+                  <Linkedin className="w-10 h-10 text-white" />
+                </div>
+                <h3 className="text-2xl sm:text-3xl font-montserrat font-bold text-senda-primary mb-4">
+                  💼 Explora 40+ carreras con datos reales
+                </h3>
+                <p className="text-base sm:text-lg text-gray-700 font-lato mb-6 leading-relaxed">
+                  Salario promedio, dónde estudiar, campo laboral, estilo de vida, propósito e impacto. Información actualizada y testimonios reales.
+                </p>
+                <Button
+                  onClick={() => router.push('/test-vocacional')}
+                  className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white px-8 py-4 rounded-xl font-montserrat font-semibold text-lg transition-all duration-300 group-hover:scale-110"
+                >
+                  <Map className="w-5 h-5 mr-2" />
+                  Ver Explorador
                 </Button>
               </CardContent>
             </Card>
@@ -314,32 +343,6 @@ export default function Home() {
               Duración aproximada: 10-15 minutos
             </p>
           </div>
-        </div>
-      </section>
-
-      {/* Explorador de Carreras */}
-      <section id="carreras" ref={careerSectionRef} className="py-12 sm:py-20">
-        <div className="container mx-auto px-4 sm:px-6">
-          <div className="text-center mb-12 sm:mb-16">
-            <div className="text-4xl sm:text-5xl mb-4 sm:mb-6">📚</div>
-            <h2 className="text-3xl sm:text-4xl font-montserrat font-bold text-senda-primary mb-4 sm:mb-6 px-2">
-              Explorador de Carreras
-            </h2>
-            <p className="text-lg sm:text-xl text-gray-700 font-lato max-w-4xl mx-auto px-4 leading-relaxed">
-              Descubre información detallada sobre más de 50 carreras profesionales. 
-              Conoce requisitos, perfil del egresado, campo laboral y perspectivas futuras.
-            </p>
-            
-            {shouldFilterByProfile && (
-              <div className="mt-6">
-                <Badge className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-4 sm:px-6 py-2 sm:py-3 text-base sm:text-lg animate-pulse">
-                  🎯 Carreras recomendadas para tu perfil
-                </Badge>
-              </div>
-            )}
-          </div>
-
-          <CareerExplorer />
         </div>
       </section>
 

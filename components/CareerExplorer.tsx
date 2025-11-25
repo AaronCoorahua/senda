@@ -56,7 +56,11 @@ const categoryConfig = {
   }
 };
 
-const CareerExplorer: React.FC = () => {
+interface CareerExplorerProps {
+  initialFilter?: string | null;
+}
+
+const CareerExplorer: React.FC<CareerExplorerProps> = ({ initialFilter }) => {
   const [selectedCategory, setSelectedCategory] = useState<string>("Todos");
   const [selectedCareer, setSelectedCareer] = useState<Career | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);

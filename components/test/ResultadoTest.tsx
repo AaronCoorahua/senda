@@ -3,8 +3,9 @@ import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Trophy, Star, Target, ArrowRight, Sparkles, Search, Compass } from 'lucide-react';
+import { Trophy, Star, Target, ArrowRight, Sparkles, Search, Compass, Home, LayoutDashboard } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { updateJourneyProgress } from '@/lib/senda-db';
 
 export interface PerfilVocacional {
   id: string;
@@ -22,9 +23,10 @@ interface ResultadoTestProps {
   perfil: PerfilVocacional;
   onContinue: () => void;
   respuestas: any;
+  onBackToDashboard?: () => void;
 }
 
-const ResultadoTest: React.FC<ResultadoTestProps> = ({ perfil, onContinue }) => {
+const ResultadoTest: React.FC<ResultadoTestProps> = ({ perfil, onContinue, onBackToDashboard }) => {
   const router = useRouter();
 
   // Mapeo de perfiles a categorías de carreras para el filtrado
@@ -39,9 +41,16 @@ const ResultadoTest: React.FC<ResultadoTestProps> = ({ perfil, onContinue }) => 
     'visionario-social': ['Ciencias Sociales', 'Educación']
   };
 
-  const handleExploreCarreras = () => {
-    // Navegar a la página principal con scroll a la sección de carreras
-    router.push('/?scrollToCarreras=true&filterByProfile=' + perfil.id);
+  const handleExploreCarreras = async () => {
+    try {
+      // Marcar fase de carreras como in_progress cuando el usuario decide explorar carreras
+      await updateJourneyProgress('carreras', 'in_progress');
+      console.log('✅ Fase de carreras iniciada');
+    } catch (error) {
+      console.error('Error actualizando progreso:', error);
+    }
+    // Navegar a la página de carreras recomendadas
+    router.push('/carreras?profile=' + perfil.id);
   };
 
   return (
@@ -162,26 +171,12 @@ const ResultadoTest: React.FC<ResultadoTestProps> = ({ perfil, onContinue }) => 
                 className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-8 py-4 text-xl font-montserrat font-bold rounded-2xl transition-all duration-300 transform hover:scale-105 shadow-lg"
               >
                 <Search className="w-6 h-6 mr-3" />
-                ➡ Ver mis carreras recomendadas
+                Ver mis carreras recomendadas
               </Button>
               <p className="text-sm text-gray-600 mt-3 font-lato">
                 Descubre fichas detalladas con información, requisitos y perspectivas profesionales
               </p>
             </div>
-          </div>
-
-          {/* Botón de continuación al hackathon */}
-          <div className="text-center">
-            <Button
-              onClick={onContinue}
-              className="bg-gradient-to-r from-senda-primary to-senda-secondary hover:from-senda-secondary hover:to-senda-primary text-white px-12 py-6 text-xl font-montserrat font-bold rounded-2xl transition-all duration-300 transform hover:scale-105 shadow-lg"
-            >
-              Continuar mi Aventura
-              <ArrowRight className="w-6 h-6 ml-3" />
-            </Button>
-            <p className="text-lg text-gray-600 mt-4 font-lato">
-              ¡Ahora viene lo mejor! Pon a prueba tu perfil con desafíos reales.
-            </p>
           </div>
         </CardContent>
       </Card>

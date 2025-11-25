@@ -41,6 +41,172 @@ export type Database = {
         }
         Relationships: []
       }
+      test_runs: {
+        Row: {
+          id: string
+          user_id: string
+          status: string
+          started_at: string
+          completed_at: string | null
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          status: string
+          started_at?: string
+          completed_at?: string | null
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          status?: string
+          started_at?: string
+          completed_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "test_runs_user_id_fkey"
+            columns: ["user_id"]
+            referencedRelation: "usuarios"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      test_answers: {
+        Row: {
+          id: string
+          user_id: string
+          run_id: string
+          section: string
+          question_code: string | null
+          question_type: string | null
+          answer_key: string | null
+          answer_label: string | null
+          answer_value: number | null
+          notes: string | null
+          created_at: string
+          phase_key: string | null
+          answer: Json | null
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          run_id: string
+          section: string
+          question_code?: string | null
+          question_type?: string | null
+          answer_key?: string | null
+          answer_label?: string | null
+          answer_value?: number | null
+          notes?: string | null
+          created_at?: string
+          phase_key?: string | null
+          answer?: Json | null
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          run_id?: string
+          section?: string
+          question_code?: string | null
+          question_type?: string | null
+          answer_key?: string | null
+          answer_label?: string | null
+          answer_value?: number | null
+          notes?: string | null
+          created_at?: string
+          phase_key?: string | null
+          answer?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "test_answers_user_id_fkey"
+            columns: ["user_id"]
+            referencedRelation: "usuarios"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "test_answers_run_id_fkey"
+            columns: ["run_id"]
+            referencedRelation: "test_runs"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      test_results: {
+        Row: {
+          id: string
+          user_id: string
+          run_id: string
+          profile_type: string
+          strengths: string | null
+          recommended_careers: string | null
+          score_json: Json | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          run_id: string
+          profile_type: string
+          strengths?: string | null
+          recommended_careers?: string | null
+          score_json?: Json | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          run_id?: string
+          profile_type?: string
+          strengths?: string | null
+          recommended_careers?: string | null
+          score_json?: Json | null
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "test_results_user_id_fkey"
+            columns: ["user_id"]
+            referencedRelation: "usuarios"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "test_results_run_id_fkey"
+            columns: ["run_id"]
+            referencedRelation: "test_runs"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      profiles: {
+        Row: {
+          user_id: string
+          display_name: string | null
+          avatar_url: string | null
+          created_at: string
+        }
+        Insert: {
+          user_id: string
+          display_name?: string | null
+          avatar_url?: string | null
+          created_at?: string
+        }
+        Update: {
+          user_id?: string
+          display_name?: string | null
+          avatar_url?: string | null
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profiles_user_id_fkey"
+            columns: ["user_id"]
+            referencedRelation: "usuarios"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
     }
     Views: {
       [_ in never]: never
