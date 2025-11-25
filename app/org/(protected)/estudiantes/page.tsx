@@ -39,6 +39,7 @@ type OrgStudent = {
   journeyProgress: JourneyProgress | null;
   profileType: string | null;
   scores: Record<string, number>;
+  recommendedCareers: string[];
 };
 
 const DIMENSIONS = ['Intereses', 'Personalidad', 'Valores', 'Talentos', 'Escenarios', 'Propósito'];
@@ -78,26 +79,26 @@ const MOCK_STUDENT_NAMES = [
 ];
 
 const MOCK_STUDENTS_TABLE: OrgStudent[] = [
-  { id: 'mock-1', firstName: 'Isabel', lastName: 'Flores', grade: '4to', classroom: 'Aula 103', status: 'completado', email: null, journeyProgress: null, profileType: 'Innovador Creativo', scores: { Intereses: 88, Personalidad: 85, Valores: 78, Talentos: 92, Escenarios: 84, Propósito: 90 } },
-  { id: 'mock-2', firstName: 'Gabriel', lastName: 'Mendoza', grade: '5to', classroom: 'Laboratorio A', status: 'en_proceso', email: null, journeyProgress: null, profileType: null, scores: { Intereses: 75, Personalidad: 80, Valores: 72, Talentos: 85, Escenarios: 78, Propósito: 82 } },
-  { id: 'mock-3', firstName: 'Andrea', lastName: 'Vargas', grade: '3ro', classroom: 'Aula 201', status: 'pendiente', email: null, journeyProgress: null, profileType: null, scores: { Intereses: 0, Personalidad: 0, Valores: 0, Talentos: 0, Escenarios: 0, Propósito: 0 } },
-  { id: 'mock-4', firstName: 'Ricardo', lastName: 'Castillo', grade: '5to', classroom: 'Aula 102', status: 'completado', email: null, journeyProgress: null, profileType: 'Líder Social', scores: { Intereses: 90, Personalidad: 88, Valores: 85, Talentos: 87, Escenarios: 89, Propósito: 91 } },
-  { id: 'mock-5', firstName: 'Daniela', lastName: 'Rojas', grade: '4to', classroom: 'Aula 202', status: 'en_proceso', email: null, journeyProgress: null, profileType: null, scores: { Intereses: 82, Personalidad: 79, Valores: 76, Talentos: 88, Escenarios: 81, Propósito: 84 } },
-  { id: 'mock-6', firstName: 'Joaquín', lastName: 'Paredes', grade: '2do', classroom: 'Aula 105', status: 'pendiente', email: null, journeyProgress: null, profileType: null, scores: { Intereses: 0, Personalidad: 0, Valores: 0, Talentos: 0, Escenarios: 0, Propósito: 0 } },
-  { id: 'mock-7', firstName: 'Fernanda', lastName: 'Quispe', grade: '5to', classroom: 'Laboratorio B', status: 'completado', email: null, journeyProgress: null, profileType: 'Emprendedor', scores: { Intereses: 93, Personalidad: 90, Valores: 87, Talentos: 95, Escenarios: 92, Propósito: 94 } },
-  { id: 'mock-8', firstName: 'Emilio', lastName: 'Guerrero', grade: '3ro', classroom: 'Aula 103', status: 'en_proceso', email: null, journeyProgress: null, profileType: null, scores: { Intereses: 78, Personalidad: 75, Valores: 73, Talentos: 80, Escenarios: 77, Propósito: 79 } },
-  { id: 'mock-9', firstName: 'Valeria', lastName: 'Salazar', grade: '4to', classroom: 'Aula 201', status: 'completado', email: null, journeyProgress: null, profileType: 'Investigador', scores: { Intereses: 89, Personalidad: 86, Valores: 83, Talentos: 91, Escenarios: 88, Propósito: 90 } },
-  { id: 'mock-10', firstName: 'Sebastián', lastName: 'Chávez', grade: '5to', classroom: 'Aula 101', status: 'pendiente', email: null, journeyProgress: null, profileType: null, scores: { Intereses: 0, Personalidad: 0, Valores: 0, Talentos: 0, Escenarios: 0, Propósito: 0 } },
-  { id: 'mock-11', firstName: 'Paula', lastName: 'Vega', grade: '2do', classroom: 'Aula 202', status: 'en_proceso', email: null, journeyProgress: null, profileType: null, scores: { Intereses: 81, Personalidad: 78, Valores: 75, Talentos: 83, Escenarios: 80, Propósito: 82 } },
-  { id: 'mock-12', firstName: 'Rodrigo', lastName: 'Medina', grade: '4to', classroom: 'Laboratorio A', status: 'completado', email: null, journeyProgress: null, profileType: 'Artista Visual', scores: { Intereses: 87, Personalidad: 84, Valores: 81, Talentos: 89, Escenarios: 86, Propósito: 88 } },
-  { id: 'mock-13', firstName: 'Mariana', lastName: 'Luna', grade: '3ro', classroom: 'Aula 105', status: 'pendiente', email: null, journeyProgress: null, profileType: null, scores: { Intereses: 0, Personalidad: 0, Valores: 0, Talentos: 0, Escenarios: 0, Propósito: 0 } },
-  { id: 'mock-14', firstName: 'Andrés', lastName: 'Soto', grade: '5to', classroom: 'Aula 102', status: 'en_proceso', email: null, journeyProgress: null, profileType: null, scores: { Intereses: 79, Personalidad: 76, Valores: 74, Talentos: 81, Escenarios: 78, Propósito: 80 } },
-  { id: 'mock-15', firstName: 'Carolina', lastName: 'Herrera', grade: '4to', classroom: 'Aula 201', status: 'completado', email: null, journeyProgress: null, profileType: 'Comunicador', scores: { Intereses: 91, Personalidad: 89, Valores: 86, Talentos: 93, Escenarios: 90, Propósito: 92 } },
-  { id: 'mock-16', firstName: 'Leonardo', lastName: 'Navarro', grade: '2do', classroom: 'Laboratorio B', status: 'pendiente', email: null, journeyProgress: null, profileType: null, scores: { Intereses: 0, Personalidad: 0, Valores: 0, Talentos: 0, Escenarios: 0, Propósito: 0 } },
-  { id: 'mock-17', firstName: 'Alejandra', lastName: 'Cortés', grade: '5to', classroom: 'Aula 103', status: 'completado', email: null, journeyProgress: null, profileType: 'Científico', scores: { Intereses: 94, Personalidad: 91, Valores: 88, Talentos: 96, Escenarios: 93, Propósito: 95 } },
-  { id: 'mock-18', firstName: 'Matías', lastName: 'Ramírez', grade: '3ro', classroom: 'Aula 202', status: 'en_proceso', email: null, journeyProgress: null, profileType: null, scores: { Intereses: 77, Personalidad: 74, Valores: 71, Talentos: 79, Escenarios: 76, Propósito: 78 } },
-  { id: 'mock-19', firstName: 'Natalia', lastName: 'Cruz', grade: '4to', classroom: 'Aula 101', status: 'completado', email: null, journeyProgress: null, profileType: 'Estratega', scores: { Intereses: 86, Personalidad: 83, Valores: 80, Talentos: 88, Escenarios: 85, Propósito: 87 } },
-  { id: 'mock-20', firstName: 'Benjamín', lastName: 'Ortiz', grade: '5to', classroom: 'Laboratorio A', status: 'pendiente', email: null, journeyProgress: null, profileType: null, scores: { Intereses: 0, Personalidad: 0, Valores: 0, Talentos: 0, Escenarios: 0, Propósito: 0 } },
+  { id: 'mock-1', firstName: 'Isabel', lastName: 'Flores', grade: '4to', classroom: 'Aula 103', status: 'completado', email: null, journeyProgress: null, profileType: 'Innovador Creativo', scores: { Intereses: 88, Personalidad: 85, Valores: 78, Talentos: 92, Escenarios: 84, Propósito: 90 }, recommendedCareers: ['Ingeniería', 'Diseño', 'Arquitectura'] },
+  { id: 'mock-2', firstName: 'Gabriel', lastName: 'Mendoza', grade: '5to', classroom: 'Laboratorio A', status: 'en_proceso', email: null, journeyProgress: null, profileType: null, scores: { Intereses: 75, Personalidad: 80, Valores: 72, Talentos: 85, Escenarios: 78, Propósito: 82 }, recommendedCareers: [] },
+  { id: 'mock-3', firstName: 'Andrea', lastName: 'Vargas', grade: '3ro', classroom: 'Aula 201', status: 'pendiente', email: null, journeyProgress: null, profileType: null, scores: { Intereses: 0, Personalidad: 0, Valores: 0, Talentos: 0, Escenarios: 0, Propósito: 0 }, recommendedCareers: [] },
+  { id: 'mock-4', firstName: 'Ricardo', lastName: 'Castillo', grade: '5to', classroom: 'Aula 102', status: 'completado', email: null, journeyProgress: null, profileType: 'Líder Social', scores: { Intereses: 90, Personalidad: 88, Valores: 85, Talentos: 87, Escenarios: 89, Propósito: 91 }, recommendedCareers: ['Ciencias Políticas', 'Trabajo Social', 'Psicología'] },
+  { id: 'mock-5', firstName: 'Daniela', lastName: 'Rojas', grade: '4to', classroom: 'Aula 202', status: 'en_proceso', email: null, journeyProgress: null, profileType: null, scores: { Intereses: 82, Personalidad: 79, Valores: 76, Talentos: 88, Escenarios: 81, Propósito: 84 }, recommendedCareers: [] },
+  { id: 'mock-6', firstName: 'Joaquín', lastName: 'Paredes', grade: '2do', classroom: 'Aula 105', status: 'pendiente', email: null, journeyProgress: null, profileType: null, scores: { Intereses: 0, Personalidad: 0, Valores: 0, Talentos: 0, Escenarios: 0, Propósito: 0 }, recommendedCareers: [] },
+  { id: 'mock-7', firstName: 'Fernanda', lastName: 'Quispe', grade: '5to', classroom: 'Laboratorio B', status: 'completado', email: null, journeyProgress: null, profileType: 'Emprendedor', scores: { Intereses: 93, Personalidad: 90, Valores: 87, Talentos: 95, Escenarios: 92, Propósito: 94 }, recommendedCareers: ['Administración', 'Marketing', 'Negocios Internacionales'] },
+  { id: 'mock-8', firstName: 'Emilio', lastName: 'Guerrero', grade: '3ro', classroom: 'Aula 103', status: 'en_proceso', email: null, journeyProgress: null, profileType: null, scores: { Intereses: 78, Personalidad: 75, Valores: 73, Talentos: 80, Escenarios: 77, Propósito: 79 }, recommendedCareers: [] },
+  { id: 'mock-9', firstName: 'Valeria', lastName: 'Salazar', grade: '4to', classroom: 'Aula 201', status: 'completado', email: null, journeyProgress: null, profileType: 'Investigador', scores: { Intereses: 89, Personalidad: 86, Valores: 83, Talentos: 91, Escenarios: 88, Propósito: 90 }, recommendedCareers: ['Biología', 'Medicina', 'Investigación Científica'] },
+  { id: 'mock-10', firstName: 'Sebastián', lastName: 'Chávez', grade: '5to', classroom: 'Aula 101', status: 'pendiente', email: null, journeyProgress: null, profileType: null, scores: { Intereses: 0, Personalidad: 0, Valores: 0, Talentos: 0, Escenarios: 0, Propósito: 0 }, recommendedCareers: [] },
+  { id: 'mock-11', firstName: 'Paula', lastName: 'Vega', grade: '2do', classroom: 'Aula 202', status: 'en_proceso', email: null, journeyProgress: null, profileType: null, scores: { Intereses: 81, Personalidad: 78, Valores: 75, Talentos: 83, Escenarios: 80, Propósito: 82 }, recommendedCareers: [] },
+  { id: 'mock-12', firstName: 'Rodrigo', lastName: 'Medina', grade: '4to', classroom: 'Laboratorio A', status: 'completado', email: null, journeyProgress: null, profileType: 'Artista Visual', scores: { Intereses: 87, Personalidad: 84, Valores: 81, Talentos: 89, Escenarios: 86, Propósito: 88 }, recommendedCareers: ['Diseño Gráfico', 'Bellas Artes', 'Arquitectura'] },
+  { id: 'mock-13', firstName: 'Mariana', lastName: 'Luna', grade: '3ro', classroom: 'Aula 105', status: 'pendiente', email: null, journeyProgress: null, profileType: null, scores: { Intereses: 0, Personalidad: 0, Valores: 0, Talentos: 0, Escenarios: 0, Propósito: 0 }, recommendedCareers: [] },
+  { id: 'mock-14', firstName: 'Andrés', lastName: 'Soto', grade: '5to', classroom: 'Aula 102', status: 'en_proceso', email: null, journeyProgress: null, profileType: null, scores: { Intereses: 79, Personalidad: 76, Valores: 74, Talentos: 81, Escenarios: 78, Propósito: 80 }, recommendedCareers: [] },
+  { id: 'mock-15', firstName: 'Carolina', lastName: 'Herrera', grade: '4to', classroom: 'Aula 201', status: 'completado', email: null, journeyProgress: null, profileType: 'Comunicador', scores: { Intereses: 91, Personalidad: 89, Valores: 86, Talentos: 93, Escenarios: 90, Propósito: 92 }, recommendedCareers: ['Periodismo', 'Comunicación Audiovisual', 'Publicidad'] },
+  { id: 'mock-16', firstName: 'Leonardo', lastName: 'Navarro', grade: '2do', classroom: 'Laboratorio B', status: 'pendiente', email: null, journeyProgress: null, profileType: null, scores: { Intereses: 0, Personalidad: 0, Valores: 0, Talentos: 0, Escenarios: 0, Propósito: 0 }, recommendedCareers: [] },
+  { id: 'mock-17', firstName: 'Alejandra', lastName: 'Cortés', grade: '5to', classroom: 'Aula 103', status: 'completado', email: null, journeyProgress: null, profileType: 'Científico', scores: { Intereses: 94, Personalidad: 91, Valores: 88, Talentos: 96, Escenarios: 93, Propósito: 95 }, recommendedCareers: ['Física', 'Química', 'Astronomía'] },
+  { id: 'mock-18', firstName: 'Matías', lastName: 'Ramírez', grade: '3ro', classroom: 'Aula 202', status: 'en_proceso', email: null, journeyProgress: null, profileType: null, scores: { Intereses: 77, Personalidad: 74, Valores: 71, Talentos: 79, Escenarios: 76, Propósito: 78 }, recommendedCareers: [] },
+  { id: 'mock-19', firstName: 'Natalia', lastName: 'Cruz', grade: '4to', classroom: 'Aula 101', status: 'completado', email: null, journeyProgress: null, profileType: 'Estratega', scores: { Intereses: 86, Personalidad: 83, Valores: 80, Talentos: 88, Escenarios: 85, Propósito: 87 }, recommendedCareers: ['Economía', 'Finanzas', 'Consultoría'] },
+  { id: 'mock-20', firstName: 'Benjamín', lastName: 'Ortiz', grade: '5to', classroom: 'Laboratorio A', status: 'pendiente', email: null, journeyProgress: null, profileType: null, scores: { Intereses: 0, Personalidad: 0, Valores: 0, Talentos: 0, Escenarios: 0, Propósito: 0 }, recommendedCareers: [] },
 ];
 
 const splitFullName = (fullName: string) => {
@@ -227,26 +228,9 @@ export default function OrgStudents() {
       const userIds = studentRows?.map((student) => student.id) ?? [];
       const latestResultsMap = new Map<string, any>();
 
-      if (userIds.length) {
-        const { data: resultsData } = await supabase
-          .from('test_results')
-          .select('id, user_id, profile_type, score_json, created_at')
-          .in('user_id', userIds)
-          .order('created_at', { ascending: false });
-
-        resultsData?.forEach((result) => {
-          if (!latestResultsMap.has(result.user_id)) {
-            latestResultsMap.set(result.user_id, result);
-          }
-        });
-      }
-
       const mappedStudents: OrgStudent[] = (studentRows || []).map((student, index) => {
         const { firstName, lastName } = splitFullName(student.nombre || 'Estudiante Senda');
         const journey = (student.journey_progress as JourneyProgress) || null;
-        const latestResult = latestResultsMap.get(student.id);
-        const profileType = latestResult?.profile_type || latestResult?.score_json?.profileData?.nombre || null;
-        const scores = extractScores(latestResult?.score_json);
 
         return {
           id: student.id,
@@ -257,8 +241,9 @@ export default function OrgStudents() {
           status: deriveStatus(journey),
           email: student.username || null,
           journeyProgress: journey,
-          profileType,
-          scores,
+          profileType: null,
+          scores: {},
+          recommendedCareers: [],
         };
       });
 
@@ -334,8 +319,99 @@ export default function OrgStudents() {
     }
   };
 
-  const handleViewResult = (student: OrgStudent) => {
-    setSelectedStudent(student);
+  const handleViewResult = async (student: OrgStudent) => {
+    console.log('[handleViewResult] Cargando resultado para estudiante:', student.id);
+    
+    // Verificar primero si tiene test_runs
+    const { data: testRuns, error: runsError } = await supabase
+      .from('test_runs')
+      .select('id, user_id, status, completed_at')
+      .eq('user_id', student.id)
+      .order('completed_at', { ascending: false });
+
+    console.log('[handleViewResult] test_runs del estudiante:', { testRuns, runsError });
+    if (testRuns && testRuns.length > 0) {
+      console.log('[handleViewResult] Último test_run:', testRuns[0]);
+      console.log('[handleViewResult] Status del test:', testRuns[0].status);
+      console.log('[handleViewResult] Completed_at:', testRuns[0].completed_at);
+      console.log('[handleViewResult] Run ID:', testRuns[0].id);
+    }
+    
+    // Cargar el test_result más reciente del estudiante usando RPC para bypasear RLS
+    console.log('[handleViewResult] 🔍 Buscando test_results para user_id:', student.id);
+    
+    const { data: testResults, error } = await supabase
+      .rpc('get_student_test_result', { student_user_id: student.id });
+
+    console.log('[handleViewResult] test_results query response:', { testResults, error });
+    console.log('[handleViewResult] testResults array length:', testResults?.length || 0);
+    console.log('[handleViewResult] testResults data:', testResults);
+    
+    if (error) {
+      console.error('[handleViewResult] ❌ Error en query test_results:', error);
+      console.error('[handleViewResult] Error code:', error.code);
+      console.error('[handleViewResult] Error message:', error.message);
+      console.error('[handleViewResult] Error details:', error.details);
+      console.error('[handleViewResult] Error hint:', error.hint);
+    } else if (!testResults || testResults.length === 0) {
+      console.warn('[handleViewResult] ⚠️ Query exitosa pero sin resultados. Puede ser un problema de RLS.');
+      console.warn('[handleViewResult] Verificar políticas de Row Level Security en test_results.');
+    }
+
+    if (testResults && testResults.length > 0) {
+      const latestResult = testResults[0];
+      const scoreJson = latestResult.score_json;
+      
+      console.log('[handleViewResult] score_json completo:', scoreJson);
+      
+      // Extraer carreras del score_json
+      let recommendedCareers: string[] = [];
+      if (scoreJson?.profileData?.carreras && Array.isArray(scoreJson.profileData.carreras)) {
+        recommendedCareers = scoreJson.profileData.carreras;
+        console.log('[handleViewResult] Carreras desde profileData.carreras:', recommendedCareers);
+      } else if (scoreJson?.recommended_careers && Array.isArray(scoreJson.recommended_careers)) {
+        recommendedCareers = scoreJson.recommended_careers;
+        console.log('[handleViewResult] Carreras desde recommended_careers:', recommendedCareers);
+      }
+      
+      // Actualizar el estudiante con los datos frescos
+      const updatedStudent = {
+        ...student,
+        profileType: latestResult.profile_type || scoreJson?.profileData?.nombre || student.profileType,
+        scores: extractScores(scoreJson),
+        recommendedCareers,
+      };
+      
+      console.log('[handleViewResult] Estudiante actualizado:', updatedStudent);
+      setSelectedStudent(updatedStudent);
+    } else {
+      console.log('[handleViewResult] ⚠️ No se encontró test_result para este estudiante.');
+      
+      // Determinar el mensaje según el estado del test_run
+      if (testRuns && testRuns.length > 0) {
+        const latestRun = testRuns[0];
+        console.log('[handleViewResult] Test iniciado pero sin resultados.');
+        console.log('[handleViewResult] Status del test_run:', latestRun.status);
+        console.log('[handleViewResult] Completed_at:', latestRun.completed_at);
+        
+        if (latestRun.status === 'completed' && latestRun.completed_at) {
+          console.error('[handleViewResult] ⚠️ PROBLEMA: test_run marcado como completado pero no hay test_results.');
+          console.error('[handleViewResult] Esto indica que saveFinalResult() NO fue llamado correctamente.');
+          console.error('[handleViewResult] Verificar que el estudiante llegó a la fase 5.5 (AnalysisLoading).');
+        } else {
+          console.log('[handleViewResult] El estudiante inició el test pero no lo completó.');
+          console.log('[handleViewResult] Debe llegar a la fase 5.5 donde se guarda el resultado.');
+        }
+      } else {
+        console.log('[handleViewResult] El estudiante no ha iniciado el test vocacional.');
+      }
+      
+      setSelectedStudent({
+        ...student,
+        recommendedCareers: [],
+      });
+    }
+    
     setIsModalOpen(true);
   };
 
@@ -583,13 +659,27 @@ export default function OrgStudents() {
                     <div className="bg-white/10 backdrop-blur-sm p-6 rounded-2xl border border-white/20">
                       <h3 className="text-xl font-bold text-white mb-4 flex items-center">
                         <span className="w-3 h-3 bg-blue-400 rounded-full mr-3"></span>
-                        Recomendaciones para Apoderados
+                        Carreras Recomendadas
                       </h3>
-                      <ol className="list-decimal pl-6 space-y-3 text-white/90 text-sm">
-                        {DEFAULT_RECOMMENDATIONS.map((item, index) => (
-                          <li key={index} className="leading-relaxed">{item}</li>
-                        ))}
-                      </ol>
+                      {selectedStudent.recommendedCareers && selectedStudent.recommendedCareers.length > 0 ? (
+                        <ul className="space-y-3">
+                          {selectedStudent.recommendedCareers.map((career, index) => (
+                            <li key={index} className="bg-white/10 p-3 rounded-xl border border-white/20 text-white font-semibold">
+                              {career}
+                            </li>
+                          ))}
+                        </ul>
+                      ) : (
+                        <div className="bg-yellow-500/20 border border-yellow-400/40 rounded-xl p-4">
+                          <p className="text-yellow-200 font-semibold text-sm mb-2 flex items-center">
+                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                            Test Vocacional Incompleto
+                          </p>
+                          <p className="text-white/80 text-xs">
+                            El estudiante debe completar todas las fases del test vocacional para ver sus carreras recomendadas.
+                          </p>
+                        </div>
+                      )}
                     </div>
 
                     <div className="bg-white/10 backdrop-blur-sm p-6 rounded-2xl border border-white/20">

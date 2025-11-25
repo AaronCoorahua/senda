@@ -7,7 +7,11 @@ import { getCarrerasByPerfil } from "@/data/carreras-data";
 export function calculateProfile(responses: TestResponse): PerfilVocacional {
   // Análisis de intereses dominantes
   const intereses = responses.intereses || {};
-  const interesesArray = Object.entries(intereses);
+  
+  // Obtener los valores de las respuestas (ej: "tecnología", "arte", "negocios")
+  // en lugar de las llaves (ej: "curso-libre", "lugar-feliz")
+  const interesesValues = Object.values(intereses).map(val => val.toLowerCase());
+  const allInterestsString = interesesValues.join(" ");
   
   // Análisis de personalidad
   const personalidad = responses.personalidad || {};
@@ -27,12 +31,10 @@ export function calculateProfile(responses: TestResponse): PerfilVocacional {
   let carreras: string[] = [];
   let consejo = "";
 
-  // Lógica de clasificación mejorada
-  const interesesKeys = Object.keys(intereses);
-  const dominantInterest = interesesKeys[0] || "general";
+  // Lógica de clasificación mejorada basada en valores de respuestas
   
   // STEM / Tecnología
-  if (dominantInterest.includes("tecnología") || dominantInterest.includes("ciencia") || dominantInterest.includes("matemáticas")) {
+  if (allInterestsString.includes("tecnología") || allInterestsString.includes("ciencia") || allInterestsString.includes("matemáticas") || allInterestsString.includes("ingeniería") || allInterestsString.includes("programación") || allInterestsString.includes("computación") || allInterestsString.includes("datos") || allInterestsString.includes("analizar") || allInterestsString.includes("resolver")) {
     perfilId = "analista-estratégico";
     perfilNombre = "Analista Estratégico";
     icono = "💻";
@@ -44,7 +46,7 @@ export function calculateProfile(responses: TestResponse): PerfilVocacional {
   }
   
   // Creatividad / Arte / Diseño
-  else if (dominantInterest.includes("arte") || dominantInterest.includes("diseño") || dominantInterest.includes("creatividad")) {
+  else if (allInterestsString.includes("arte") || allInterestsString.includes("diseño") || allInterestsString.includes("creatividad") || allInterestsString.includes("música") || allInterestsString.includes("pintura") || allInterestsString.includes("dibujo") || allInterestsString.includes("crear") || allInterestsString.includes("expresar")) {
     perfilId = "explorador-creativo";
     perfilNombre = "Explorador Creativo";
     icono = "🎨";
@@ -56,7 +58,7 @@ export function calculateProfile(responses: TestResponse): PerfilVocacional {
   }
   
   // Negocios / Liderazgo
-  else if (dominantInterest.includes("negocios") || dominantInterest.includes("liderazgo") || dominantInterest.includes("emprendimiento")) {
+  else if (allInterestsString.includes("negocios") || allInterestsString.includes("liderazgo") || allInterestsString.includes("emprendimiento") || allInterestsString.includes("finanzas") || allInterestsString.includes("empresa") || allInterestsString.includes("gestionar") || allInterestsString.includes("organizar") || allInterestsString.includes("vender")) {
     perfilId = "líder-emprendedor";
     perfilNombre = "Líder Emprendedor";
     icono = "📊";
@@ -68,7 +70,7 @@ export function calculateProfile(responses: TestResponse): PerfilVocacional {
   }
   
   // Salud / Ciencias de la vida
-  else if (dominantInterest.includes("salud") || dominantInterest.includes("medicina") || dominantInterest.includes("biología")) {
+  else if (allInterestsString.includes("salud") || allInterestsString.includes("medicina") || allInterestsString.includes("biología") || allInterestsString.includes("ayudar") || allInterestsString.includes("curar") || allInterestsString.includes("cuidar") || allInterestsString.includes("pacientes") || allInterestsString.includes("naturaleza")) {
     perfilId = "guía-humanista";
     perfilNombre = "Guía Humanista";
     icono = "⚕️";
@@ -80,7 +82,7 @@ export function calculateProfile(responses: TestResponse): PerfilVocacional {
   }
   
   // Comunicación / Humanidades
-  else if (dominantInterest.includes("comunicación") || dominantInterest.includes("escritura") || dominantInterest.includes("idiomas")) {
+  else if (allInterestsString.includes("comunicación") || allInterestsString.includes("escritura") || allInterestsString.includes("idiomas") || allInterestsString.includes("hablar") || allInterestsString.includes("escribir") || allInterestsString.includes("leer") || allInterestsString.includes("historia") || allInterestsString.includes("social")) {
     perfilId = "comunicador-influyente";
     perfilNombre = "Comunicador Influyente";
     icono = "📢";

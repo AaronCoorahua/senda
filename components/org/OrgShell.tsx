@@ -26,12 +26,12 @@ import {
 import { supabase } from '@/integrations/supabase/client';
 
 const navigationItems = [
-  { path: '/org/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { path: '/org/estudiantes', label: 'Estudiantes', icon: Users },
-  { path: '/org/resultados', label: 'Resultados', icon: FileText },
-  { path: '/org/reportes', label: 'Reportes', icon: BarChart3 },
-  { path: '/org/configuracion', label: 'Configuración', icon: Settings },
-  { path: '/org/soporte', label: 'Soporte', icon: HelpCircle },
+  { path: '/org/dashboard', label: 'Dashboard', icon: LayoutDashboard, enabled: true },
+  { path: '/org/estudiantes', label: 'Estudiantes', icon: Users, enabled: true },
+  { path: '/org/resultados', label: 'Resultados', icon: FileText, enabled: false, badge: 'Próximamente' },
+  { path: '/org/reportes', label: 'Reportes', icon: BarChart3, enabled: false, badge: 'Próximamente' },
+  { path: '/org/configuracion', label: 'Configuración', icon: Settings, enabled: false },
+  { path: '/org/soporte', label: 'Soporte', icon: HelpCircle, enabled: false },
 ];
 
 export default function OrgShell({ children }: { children: React.ReactNode }) {
@@ -151,7 +151,7 @@ export default function OrgShell({ children }: { children: React.ReactNode }) {
         )}
 
         {/* Main content */}
-        <main className="flex-1 p-6 lg:p-8">
+        <main className="flex-1 p-6 lg:p-8 overflow-auto">
           {children}
         </main>
       </div>

@@ -5,7 +5,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Users, CheckCircle2, TrendingUp, AlertCircle, AlertTriangle, Target } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import Image from 'next/image';
@@ -124,6 +123,7 @@ export default function OrgDashboard() {
   const [atRiskStudents, setAtRiskStudents] = useState<AtRiskStudent[]>([]);
   const [gradeAlerts, setGradeAlerts] = useState<GradeCounts>(() => EMPTY_GRADE_COUNTS());
   const [topCareers, setTopCareers] = useState<Array<{ name: string; percentage: number; color: string }>>([]);
+  const [topMetricTitle, setTopMetricTitle] = useState<string>('Top 3 Áreas/Carreras');
   const [recentActivity, setRecentActivity] = useState<Array<{
     nombre: string;
     action: string;
@@ -191,7 +191,7 @@ export default function OrgDashboard() {
 
       const { data: estudiantesData, error: estudiantesError } = await supabase
         .from('usuarios')
-        .select('id, nombre, colegio_id, tipo_usuario, grado')
+        .select('id, nombre, colegio_id, tipo_usuario, grado, journey_progress')
         .eq('colegio_id', colegioId)
         .neq('tipo_usuario', 'colegio');
 
@@ -209,6 +209,7 @@ export default function OrgDashboard() {
         setAtRiskStudents([]);
         setGradeAlerts(EMPTY_GRADE_COUNTS());
         setTopCareers([]);
+        setTopMetricTitle('Top 3 Áreas/Carreras');
         setRecentActivity([]);
         return;
       }
@@ -225,53 +226,79 @@ export default function OrgDashboard() {
 
       const runs = runsData || [];
 
-      const completedTests = runs.filter(run => run.status === 'completed').length;
-      const pendingTests = runs.filter(run => run.status === 'in_progress').length;
+      // Contar estudiantes que completaron TODO el journey (linkedin completed)
+      const completedTests = estudiantes.filter(student => {
+        const journey = student.journey_progress as any;
+        return journey?.phases?.linkedin?.status === 'completed';
+      }).length;
+
+      // Pendientes = todos los que NO han completado linkedin
+      const pendingTests = estudiantes.filter(student => {
+        const journey = student.journey_progress as any;
+        return journey?.phases?.linkedin?.status !== 'completed';
+      }).length;
 
       type StatusSnapshot = {
         hasActive: boolean;
         hasCompleted: boolean;
         latestActiveStart: string | null;
+        journeyPhase: string | null;
       };
 
       const statusByStudent = new Map<string, StatusSnapshot>();
 
-      runs.forEach((run) => {
-        if (!run.user_id) {
-          return;
-        }
-        const snapshot = statusByStudent.get(run.user_id) || {
-          hasActive: false,
-          hasCompleted: false,
+      estudiantes.forEach((student) => {
+        const journey = student.journey_progress as any;
+        const currentPhase = journey?.current_phase || 'test';
+        const linkedinStatus = journey?.phases?.linkedin?.status;
+        
+        const snapshot: StatusSnapshot = {
+          hasActive: linkedinStatus !== 'completed',
+          hasCompleted: linkedinStatus === 'completed',
           latestActiveStart: null,
+          journeyPhase: currentPhase,
         };
 
-        if (run.status === 'in_progress') {
-          snapshot.hasActive = true;
+        // Buscar la fecha más reciente de test_runs para este estudiante
+        const studentRuns = runs.filter(run => run.user_id === student.id);
+        studentRuns.forEach(run => {
           const candidateDate = run.started_at || run.completed_at || null;
           if (candidateDate) {
             if (!snapshot.latestActiveStart || new Date(candidateDate) > new Date(snapshot.latestActiveStart)) {
               snapshot.latestActiveStart = candidateDate;
             }
           }
-        }
+        });
 
-        if (run.status === 'completed') {
-          snapshot.hasCompleted = true;
-        }
-
-        statusByStudent.set(run.user_id, snapshot);
+        statusByStudent.set(student.id, snapshot);
       });
 
       const dynamicAtRisk = estudiantes
-        .filter(student => statusByStudent.get(student.id)?.hasActive)
+        .filter(student => {
+          const status = statusByStudent.get(student.id);
+          return status?.hasActive; // Todos los que no completaron linkedin
+        })
         .map(student => {
           const status = statusByStudent.get(student.id);
+          const journey = student.journey_progress as any;
+          const currentPhase = status?.journeyPhase || 'test';
+          
+          let issue = '';
+          if (currentPhase === 'test') {
+            issue = `Test vocacional ${formatRelativeTime(status?.latestActiveStart)}`;
+          } else if (currentPhase === 'carreras') {
+            issue = 'Explorando carreras';
+          } else if (currentPhase === 'mini_reto') {
+            issue = 'En mini reto';
+          } else if (currentPhase === 'linkedin') {
+            issue = 'Creando perfil LinkedIn';
+          }
+
           return {
             userId: student.id,
             name: student.nombre || 'Estudiante sin nombre',
             grade: student.grado || 'Sin grado',
-            issue: buildIssueDescription(status?.latestActiveStart),
+            issue: issue || 'Journey incompleto',
             severity: getSeverityFromDate(status?.latestActiveStart),
           } as AtRiskStudent;
         });
@@ -279,9 +306,11 @@ export default function OrgDashboard() {
       const activeGradeCounts = EMPTY_GRADE_COUNTS();
 
       estudiantes.forEach(student => {
-        const status = statusByStudent.get(student.id);
-        const hasActive = status?.hasActive ?? false;
-        if (hasActive) {
+        const journey = student.journey_progress as any;
+        const linkedinCompleted = journey?.phases?.linkedin?.status === 'completed';
+        
+        // Contar como pendiente si NO completó linkedin
+        if (!linkedinCompleted) {
           const gradeKey = normalizeGradeLabel(student.grado);
           if (gradeKey) {
             activeGradeCounts[gradeKey] = (activeGradeCounts[gradeKey] || 0) + 1;
@@ -293,7 +322,7 @@ export default function OrgDashboard() {
       setGradeAlerts(activeGradeCounts);
 
       await loadRecentActivity(runs, estudiantes);
-      await loadTopCareers(estudiantesIds);
+      await loadTopCareers(colegioId);
 
       setRealStats({
         totalStudents,
@@ -305,57 +334,55 @@ export default function OrgDashboard() {
     }
   };
 
-  const loadTopCareers = async (estudiantesIds: string[]) => {
+  const loadTopCareers = async (colegioId: string | null) => {
     try {
-      // Obtener test_results de los estudiantes del colegio
-      const { data: testResults, error } = await supabase
-        .from('test_results')
-        .select('score_json')
-        .in('user_id', estudiantesIds);
-
-      if (error) {
-        console.error('Error obteniendo test_results:', error);
+      if (!colegioId) {
         setTopCareers([]);
+        setTopMetricTitle('Top 3 Áreas/Carreras');
+        console.log('[Dashboard] Sin colegio_id para calcular métricas');
         return;
       }
 
-      if (!testResults || testResults.length === 0) {
-        setTopCareers([]);
-        return;
-      }
-
-      // Contar carreras recomendadas
-      const careerCounts = new Map<string, number>();
-      
-      testResults.forEach((result) => {
-        const scoreJson = result.score_json as any;
-        const careers = scoreJson?.recommended_careers || scoreJson?.profileData?.carreras || [];
-        
-        careers.forEach((career: string) => {
-          if (career) {
-            careerCounts.set(career, (careerCounts.get(career) || 0) + 1);
-          }
-        });
+      const { data, error } = await supabase.rpc('get_top_metrics_for_colegio', {
+        p_colegio_id: colegioId,
       });
 
-      // Ordenar por cantidad y tomar top 3
-      const sortedCareers = Array.from(careerCounts.entries())
-        .sort((a, b) => b[1] - a[1])
-        .slice(0, 3);
+      if (error) {
+        console.error('Error obteniendo métricas del colegio:', error);
+        setTopCareers([]);
+        setTopMetricTitle('Top 3 Áreas/Carreras');
+        return;
+      }
 
-      const total = testResults.length;
+      if (!data || data.length === 0) {
+        setTopCareers([]);
+        setTopMetricTitle('Top 3 Áreas/Carreras');
+        console.log('[Dashboard] get_top_metrics_for_colegio retornó vacío');
+        return;
+      }
+
+      console.log('[Dashboard] get_top_metrics_for_colegio data:', data);
+
+      const total = data[0]?.total_metric_count ?? 0;
+      const metricTitle = data[0]?.metric_type === 'profile'
+        ? 'Top 3 Perfiles Vocacionales'
+        : 'Top 3 Áreas/Carreras';
       const colors = ['bg-blue-500', 'bg-green-500', 'bg-purple-500'];
 
-      const topCareersData = sortedCareers.map(([name, count], index) => ({
-        name,
-        percentage: Math.round((count / total) * 100),
+      const topEntries = data.slice(0, 3);
+      const topCareersData = topEntries.map((entry: any, index: number) => ({
+        name: entry.label || 'Sin dato',
+        percentage: total > 0 ? Math.round((entry.metric_count / total) * 100) : 0,
         color: colors[index] || 'bg-gray-500',
       }));
 
       setTopCareers(topCareersData);
+      setTopMetricTitle(metricTitle);
+      console.log('[Dashboard] Top metrics calculado:', topCareersData);
     } catch (error) {
-      console.error('Error calculando top carreras:', error);
+      console.error('Error calculando top métricas:', error);
       setTopCareers([]);
+      setTopMetricTitle('Top 3 Áreas/Carreras');
     }
   };
 
@@ -478,6 +505,7 @@ export default function OrgDashboard() {
           { name: 'Artes', percentage: 25, color: 'bg-purple-500' },
         ]
       : topCareers,
+    topCareersTitle: useMock ? 'Top 3 Áreas/Carreras' : topMetricTitle,
     // Combinar actividad mock con actividad real solo para colegios específicos
     recentActivity: [
       ...recentActivity,
@@ -573,18 +601,26 @@ export default function OrgDashboard() {
         {/* Top Careers */}
         <Card className="bg-white shadow-md">
           <CardHeader>
-            <CardTitle className="text-xl text-[#134E4A]">Top 3 Áreas/Carreras</CardTitle>
+            <CardTitle className="text-xl text-[#134E4A]">{stats.topCareersTitle}</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
-            {stats.topCareers.map((career, index) => (
-              <div key={index}>
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm font-medium text-gray-700">{career.name}</span>
-                  <span className="text-sm font-bold text-[#134E4A]">{career.percentage}%</span>
-                </div>
-                <Progress value={career.percentage} className="h-3" />
+          <CardContent>
+            {stats.topCareers.length === 0 ? (
+              <p className="text-sm text-gray-500">
+                Aún no hay resultados de test suficientes para mostrar esta métrica.
+              </p>
+            ) : (
+              <div className="space-y-4">
+                {stats.topCareers.map((career, index) => (
+                  <div key={index}>
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm font-medium text-gray-700">{career.name}</span>
+                      <span className="text-sm font-bold text-[#134E4A]">{career.percentage}%</span>
+                    </div>
+                    <Progress value={career.percentage} className="h-3" />
+                  </div>
+                ))}
               </div>
-            ))}
+            )}
           </CardContent>
         </Card>
 
