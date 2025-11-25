@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,7 +9,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Compass } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
-export default function OrgLogin() {
+function OrgLoginContent() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
@@ -178,5 +178,13 @@ export default function OrgLogin() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function OrgLogin() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Cargando...</div>}>
+      <OrgLoginContent />
+    </Suspense>
   );
 }

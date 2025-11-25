@@ -6,10 +6,10 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Compass, Target, ArrowRight, Star, BookOpen, Heart, Lightbulb, Search, BarChart3, Award, Users, Brain, Map, Trophy, Rocket, Zap, LogOut, Linkedin } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, Suspense } from "react";
 import CareerExplorer from "@/components/CareerExplorer";
 
-export default function Home() {
+function HomeContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const careerSectionRef = useRef<HTMLDivElement>(null);
@@ -442,5 +442,13 @@ export default function Home() {
         </div>
       </footer>
     </div>
+  );
+}
+
+export default function Home() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Cargando...</div>}>
+      <HomeContent />
+    </Suspense>
   );
 }

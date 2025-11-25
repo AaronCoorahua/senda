@@ -1,10 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "@/integrations/supabase/client";
 
-export default function Login() {
+function LoginForm() {
   const [email, setEmail] = useState("");
   const [pwd, setPwd] = useState("");
   const [modo, setModo] = useState<"login" | "signup">("login");
@@ -77,5 +77,17 @@ export default function Login() {
         </button>
       </form>
     </div>
+  );
+}
+
+export default function Login() {
+  return (
+    <Suspense fallback={
+      <div style={{minHeight:'100vh',display:'flex',alignItems:'center',justifyContent:'center'}}>
+        <div>Cargando...</div>
+      </div>
+    }>
+      <LoginForm />
+    </Suspense>
   );
 }
